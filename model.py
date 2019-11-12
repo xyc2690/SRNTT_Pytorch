@@ -23,9 +23,11 @@ class VGGMOD(nn.Module):
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
         self.conv3_1 = nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=True)
         self.relu3_1 = nn.ReLU(inplace=True)
+        self.mean_pix = torch.Tensor([123.68, 116.779, 103.939]).view(-1, 1, 1).cuda()
 
     def forward(self, x):
-        x = self.conv1_1(x)
+        x = self.conv1_1(x - self.mean_pix)
+        # x = self.conv1_1(x)
         x1_1 = self.relu1_1(x)
         x = self.conv1_2(x1_1)
         x = self.relu1_2(x)
