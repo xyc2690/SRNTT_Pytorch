@@ -92,7 +92,6 @@ for i in img_ref:
 
 vggmodel.load_state_dict(torch.load('VGGMOD.pth'))
 
-# srmodel.load_state_dict(torch.load('init20/sr_model_19.pth'))
 
 with torch.no_grad():
     if not exists(map_path):
@@ -106,6 +105,8 @@ with torch.no_grad():
             map_ref = vggmodel(torch.Tensor(img_ref[0]).unsqueeze(0).permute(0,3,1,2))
             map_ref_sr, _, _ = vggmodel(torch.Tensor(img_ref_sr[0]).unsqueeze(0).permute(0,3,1,2))
 
+        if not exists('samples_test'):
+            makedirs('samples_test')
         imsave('samples_test/inp_hr.png', img_hr)
         imsave('samples_test/inp_lr.png', img_input)
         imsave('samples_test/inp_sr.png', img_input_sr)
@@ -145,25 +146,26 @@ with torch.no_grad():
 
 
     # test model
-
     load_net = torch.load('sr_model_final.pth')
     load_net_clean = OrderedDict()  # remove unnecessary 'module.'
-	for k, v in load_net.items():
-		if k.startswith('module.'):
-			load_net_clean[k[7:]] = v
-		else:
-			load_net_clean[k] = v
-	srmodel.load_state_dict(load_net_clean, strict=True)
-	upscale, output = srmodel(input_lr, input_maps)
-	im_out = output.cpu().numpy().squeeze().transpose(1,2,0)
-	im_up = upscale.cpu().numpy().squeeze().transpose(1,2,0)
 
-	save_path = 'sample_train_CUFED_128'
+    for k, v in load_net.items():
+        if k.startswith('module.'):
+            load_net_clean[k[7:]] = v
+        else:
+            load_net_clean[k] = v
 
-	if not exists(save_path):
-		makedirs(save_path)
-	imsave(save_path + '/output_'+str(i)+'.png', ((im_out+1)*127.5).astype(np.uint8))
-	
+    srmodel.load_state_dict(load_net_clean, strict=True)
+    upscale, output = srmodel(input_lr, input_maps)
+    im_out = output.cpu().numpy().squeeze().transpose(1,2,0)
+    im_up = upscale.cpu().numpy().squeeze().transpose(1,2,0)
+
+    save_path = 'sample_test'
+
+    if not exists(save_path):
+        makedirs(save_path)
+    imsave(save_path + '/output'+str(i)+'.png', ((im_out+1)*127.5).astype(np.uint8))
+
     imsave(save_path + '/upscale'+'.png', ((im_up+1)*127.5).astype(np.uint8))
     imsave(save_path + '/HR.png', img_hr)
     imsave(save_path + '/bicubic.png', img_input_sr)

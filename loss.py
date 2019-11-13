@@ -72,3 +72,26 @@ class GradientPenaltyLoss(nn.Module):
 
         loss = ((grad_interp_norm - 1)**2).mean()
         return loss
+
+
+def gram_matrix(features):
+    """
+    Compute the Gram matrix from feature maps.
+
+    Input: PyTorch Tensor of shape (N, C, H, W) representing feature maps for
+           a batch of N images.
+    Output: PyTorch Tensor of shape (N, C, C) representing the
+            Gram matrices for the N images.
+    """
+    N = features.shape[0]
+    C = features.shape[1]
+    H = features.shape[2]
+    W = features.shape[3]
+
+    features = features.reshape(N, C, H * W)
+    gram_matrix = torch.matmul(features, features.transpose(1, 2))
+
+    # # Normalize
+    # gram_matrix = gram_matrix / (2 * C * H * W)
+
+    return gram_matrix
